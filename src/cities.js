@@ -23,6 +23,6 @@ module.exports = [
   { name: "高知",   office: "390000" },
   { name: "福岡",   office: "400000" },
   { name: "長崎",   office: "420000" },
-  { name: "鹿児島", office: "460000" },
+  { name: "鹿児島", office: "460100" },
   { name: "那覇",   office: "471000" },
 ];

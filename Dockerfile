@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       chromium \
       ffmpeg \
       xvfb \
+      x11-utils \
       curl \
       ca-certificates \
       fonts-noto-cjk \

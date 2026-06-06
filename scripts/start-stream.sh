@@ -40,12 +40,33 @@ until curl -sf "http://localhost:${PORT}/healthz" >/dev/null 2>&1; do sleep 1; d
 echo "[stream] dashboard server OK"
 
 # ===== 2) Xvfb 仮想ディスプレイ =====
-Xvfb ":${DISPLAY_NUM}" -screen 0 "${OUTPUT_W}x${OUTPUT_H}x24" -nolisten tcp &
-sleep 2
+# restart で同一コンテナが再起動すると /tmp に古いXロックが残り、
+# 「Server is already active for display」で起動不能になるため先に除去。
+rm -f "/tmp/.X${DISPLAY_NUM}-lock" "/tmp/.X11-unix/X${DISPLAY_NUM}" 2>/dev/null || true
+
+Xvfb ":${DISPLAY_NUM}" -screen 0 "${OUTPUT_W}x${OUTPUT_H}x24" -nolisten tcp -ac &
+XVFB_PID=$!
+
+# 固定sleepでなくディスプレイが実際に使えるまで待つ（最大15秒）
+echo "[stream] Xvfb 起動待ち..."
+for _ in $(seq 1 30); do
+  if xdpyinfo -display ":${DISPLAY_NUM}" >/dev/null 2>&1; then break; fi
+  if ! kill -0 "${XVFB_PID}" 2>/dev/null; then
+    echo "[stream] ERROR: Xvfb が起動できませんでした" >&2
+    exit 1
+  fi
+  sleep 0.5
+done
+if ! xdpyinfo -display ":${DISPLAY_NUM}" >/dev/null 2>&1; then
+  echo "[stream] ERROR: Xvfb のディスプレイ :${DISPLAY_NUM} が使用可能になりませんでした" >&2
+  exit 1
+fi
+echo "[stream] Xvfb ready on :${DISPLAY_NUM}"
 
 # ===== 3) Chromium キオスク =====
 "${CHROMIUM_BIN}" \
   --no-sandbox --disable-dev-shm-usage \
+  --disable-gpu --use-gl=swiftshader --disable-software-rasterizer \
   --kiosk --start-fullscreen \
   --window-size="${OUTPUT_W},${OUTPUT_H}" --window-position=0,0 \
   --force-device-scale-factor="${SCALE}" \

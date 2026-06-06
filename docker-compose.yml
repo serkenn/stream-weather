@@ -15,6 +15,10 @@ services:
     volumes:
       # フリーBGMをここに置く（コンテナ再ビルド不要）
       - ./bgm:/app/bgm:ro
+      # アプリ本体をマウント → コード/スクリプト修正は再ビルド不要、restartで反映。
+      # （Dockerfileやpackage.jsonを変えたときだけ --build が必要）
+      - ./src:/app/src:ro
+      - ./scripts:/app/scripts:ro
     # 共有メモリ不足で Chromium が落ちるのを防ぐ
     shm_size: "2gb"
     ports:

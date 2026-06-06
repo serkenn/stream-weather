@@ -55,9 +55,9 @@ main {
   flex: 1; min-height: 0;
   display: grid;
   grid-template-columns: 23vw 1fr;
-  grid-template-rows: minmax(0, 1fr) minmax(0, 0.92fr);
+  grid-template-rows: minmax(0, 2fr) minmax(0, 0.6fr);
   grid-template-areas: "left center" "weekly weekly";
-  padding: 1.4vh 2.2vw; gap: 1.4vh 1.6vw;
+  padding: 1.4vh 2.2vw; gap: 1.2vh 1.6vw;
 }
 #left { grid-area: left; }
 #center { grid-area: center; }
@@ -142,20 +142,22 @@ main {
   min-height: 0; overflow: hidden;
   display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: minmax(0, 1fr); gap: 0.7vw;
 }
+.weekly .sec-title { margin-bottom: 0.5vh; }
 .day {
-  background: var(--panel); border: 0.14vh solid var(--panel-line); border-radius: 1vh;
+  background: var(--panel); border: 0.14vh solid var(--panel-line); border-radius: 0.8vh;
   min-height: 0; overflow: hidden;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3vh; padding: 0.6vh 0.4vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.15vh; padding: 0.4vh 0.5vw;
 }
-.day .dow { font-size: 1.9vh; font-weight: 800; }
+.day .dow { font-size: 1.7vh; font-weight: 800; }
 .day .dow.sun { color: #ff7a7a; }
 .day .dow.sat { color: #7ab8ff; }
-.day .md { font-size: 1.5vh; opacity: 0.8; }
-.day .icon { font-size: 3.6vh; line-height: 1; }
-.day .temps { display: flex; gap: 0.6vw; align-items: baseline; }
-.day .tmax { font-size: 2.2vh; font-weight: 800; color: var(--hot); }
-.day .tmin { font-size: 1.8vh; font-weight: 700; color: var(--cold); }
-.day .pop { font-size: 1.5vh; color: var(--rain); font-weight: 700; }
+.day .md { font-size: 1.3vh; opacity: 0.8; }
+.day .icon { font-size: 2.8vh; line-height: 1; }
+.day .temps { display: flex; gap: 0.5vw; align-items: baseline; }
+.day .tmax { font-size: 1.9vh; font-weight: 800; color: var(--hot); }
+.day .tmin { font-size: 1.6vh; font-weight: 700; color: var(--cold); }
+.day .pop { font-size: 1.4vh; color: var(--rain); font-weight: 700; }
 
 .fade { animation: fade 0.6s ease; }
 @keyframes fade { from { opacity: 0; transform: translateY(1vh); } to { opacity: 1; transform: none; } }

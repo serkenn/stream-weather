@@ -64,6 +64,12 @@ fi
 echo "[stream] Xvfb ready on :${DISPLAY_NUM}"
 
 # ===== 3) Chromium キオスク =====
+# 起動フラグだけでは翻訳バーが残る環境があるため、管理ポリシーで確実に無効化。
+mkdir -p /etc/chromium/policies/managed 2>/dev/null || true
+cat > /etc/chromium/policies/managed/no-translate.json <<'JSON' 2>/dev/null || true
+{ "TranslateEnabled": false, "SpellcheckEnabled": false, "BrowserSignin": 0 }
+JSON
+
 "${CHROMIUM_BIN}" \
   --no-sandbox --disable-dev-shm-usage \
   --disable-gpu --use-gl=swiftshader --disable-software-rasterizer \

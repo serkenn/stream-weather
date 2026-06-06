@@ -7,6 +7,22 @@
 const DOW = ["日", "月", "火", "水", "木", "金", "土"];
 const ROTATE_MS = 12000; // 週間予報の地点切替間隔
 
+// 表示は常に日本時間(JST/GMT+9)。コンテナのTZに依存しないようIntlで明示する。
+const TZ = "Asia/Tokyo";
+const WD = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+const JST_FMT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit",
+  hour: "2-digit", minute: "2-digit", second: "2-digit",
+  weekday: "short", hourCycle: "h23",
+});
+// Date → JSTの各フィールド {year,month,day,hour,minute,second,weekday,dow}
+function jst(date) {
+  const o = {};
+  for (const p of JST_FMT.formatToParts(date)) if (p.type !== "literal") o[p.type] = p.value;
+  o.dow = WD[o.weekday];
+  return o;
+}
+
 let data = null;
 let rotateIndex = 0;
 
@@ -46,16 +62,10 @@ function num(v, suffix = "") {
 }
 
 function renderClock() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth() + 1;
-  const d = now.getDate();
-  const dow = DOW[now.getDay()];
-  const hh = String(now.getHours()).padStart(2, "0");
-  const mm = String(now.getMinutes()).padStart(2, "0");
-  const ss = String(now.getSeconds()).padStart(2, "0");
-  document.getElementById("date").textContent = `${y}年${m}月${d}日（${dow}）`;
-  document.getElementById("time").textContent = `${hh}:${mm}:${ss}`;
+  const p = jst(new Date());
+  document.getElementById("date").textContent =
+    `${+p.year}年${+p.month}月${+p.day}日（${DOW[p.dow]}）`;
+  document.getElementById("time").textContent = `${p.hour}:${p.minute}:${p.second}`;
 }
 
 function renderCards() {
@@ -99,10 +109,10 @@ function renderWeekly() {
   root.classList.add("fade");
 
   for (const day of c.week.slice(0, 7)) {
-    const dt = day.date ? new Date(day.date) : null;
-    const dowIdx = dt ? dt.getDay() : -1;
+    const p = day.date ? jst(new Date(day.date)) : null;
+    const dowIdx = p ? p.dow : -1;
     const dowCls = dowIdx === 0 ? "sun" : dowIdx === 6 ? "sat" : "";
-    const md = dt ? `${dt.getMonth() + 1}/${dt.getDate()}` : "--";
+    const md = p ? `${+p.month}/${+p.day}` : "--";
     const dow = dowIdx >= 0 ? DOW[dowIdx] : "-";
     const el = document.createElement("div");
     el.className = "day";
@@ -122,8 +132,8 @@ function renderWeekly() {
 function renderUpdated() {
   const u = document.getElementById("updated");
   if (data && data.updatedAt) {
-    const d = new Date(data.updatedAt);
-    u.textContent = `最終更新：${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const p = jst(new Date(data.updatedAt));
+    u.textContent = `最終更新：${p.hour}:${p.minute}`;
   }
 }
 

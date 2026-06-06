@@ -70,8 +70,11 @@ echo "[stream] Xvfb ready on :${DISPLAY_NUM}"
   --kiosk --start-fullscreen \
   --window-size="${OUTPUT_W},${OUTPUT_H}" --window-position=0,0 \
   --force-device-scale-factor="${SCALE}" \
+  --lang=ja --accept-lang=ja-JP,ja \
   --no-first-run --noerrdialogs --disable-infobars --hide-scrollbars \
-  --disable-translate --disable-features=Translate \
+  --disable-translate \
+  --disable-features=Translate,TranslateUI,TranslateSubFrames \
+  --disable-component-update --disable-notifications --disable-popup-blocking \
   --autoplay-policy=no-user-gesture-required \
   --check-for-update-interval=31536000 \
   "http://localhost:${PORT}/" >/tmp/chromium.log 2>&1 &

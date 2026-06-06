@@ -1,0 +1,116 @@
+/* すべてvw/vhベース。4K(3840x2160)でも8K(7680x4320)でも同一レイアウトが等倍スケールする。 */
+:root {
+  --fg: #ffffff;
+  --bg-top: #0a2a4a;
+  --bg-bottom: #061a30;
+  --panel: rgba(255, 255, 255, 0.07);
+  --panel-line: rgba(255, 255, 255, 0.16);
+  --accent: #ffd23f;
+  --hot: #ff5a4d;
+  --cold: #38a8ff;
+  --rain: #5ec8ff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #061a30;
+  color: var(--fg);
+  font-family: "Noto Sans CJK JP", "Noto Sans JP", "Hiragino Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  width: 100vw; height: 100vh;
+  display: flex; flex-direction: column;
+  background: radial-gradient(120% 120% at 50% -10%, #114a82 0%, #0a2a4a 45%, #061a30 100%);
+}
+
+/* ===== ヘッダー / フッター ===== */
+.bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.1vh 2.2vw;
+  background: linear-gradient(90deg, rgba(255,210,63,0.16), rgba(255,210,63,0));
+  border-bottom: 0.18vh solid var(--panel-line);
+}
+.title {
+  font-size: 2.6vh; font-weight: 800; letter-spacing: 0.04em;
+  color: var(--accent);
+  text-shadow: 0 0.2vh 0.6vh rgba(0,0,0,0.5);
+}
+.clock { display: flex; align-items: baseline; gap: 1vw; }
+.date { font-size: 2.2vh; font-weight: 600; opacity: 0.9; }
+.time { font-size: 3.4vh; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.foot {
+  margin-top: auto;
+  border-top: 0.18vh solid var(--panel-line);
+  border-bottom: none;
+  background: rgba(0,0,0,0.25);
+  font-size: 1.6vh; opacity: 0.85;
+}
+
+main { flex: 1; display: flex; flex-direction: column; padding: 1.6vh 2.2vw; gap: 1.8vh; min-height: 0; }
+.sec-title {
+  font-size: 2.2vh; font-weight: 800; margin-bottom: 1vh;
+  padding-left: 0.8vw; border-left: 0.5vw solid var(--accent);
+}
+
+/* ===== きょうの天気カード ===== */
+.today { flex: 1.25; display: flex; flex-direction: column; min-height: 0; }
+.cards {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.9vw;
+  align-content: stretch;
+}
+.card {
+  background: var(--panel);
+  border: 0.14vh solid var(--panel-line);
+  border-radius: 1vh;
+  padding: 1vh 0.6vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.4vh;
+  overflow: hidden;
+}
+.card .city { font-size: 2vh; font-weight: 800; }
+.card .icon { font-size: 4.6vh; line-height: 1; }
+.card .wtext { font-size: 1.5vh; opacity: 0.9; text-align: center; height: 2.6vh; overflow: hidden; }
+.card .temps { display: flex; gap: 0.8vw; align-items: baseline; }
+.card .tmax { font-size: 2.8vh; font-weight: 800; color: var(--hot); font-variant-numeric: tabular-nums; }
+.card .tmin { font-size: 2.2vh; font-weight: 700; color: var(--cold); font-variant-numeric: tabular-nums; }
+.card .pop  { font-size: 1.7vh; color: var(--rain); font-weight: 700; }
+.card .unit { font-size: 1.4vh; opacity: 0.7; }
+.card.err { opacity: 0.45; }
+
+/* ===== 週間予報 ===== */
+.weekly { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.weekly-city { color: var(--accent); font-size: 2vh; }
+.week {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.9vw;
+}
+.day {
+  background: var(--panel);
+  border: 0.14vh solid var(--panel-line);
+  border-radius: 1vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.5vh; padding: 1vh 0.4vw;
+}
+.day .dow { font-size: 1.9vh; font-weight: 800; }
+.day .dow.sun { color: #ff7a7a; }
+.day .dow.sat { color: #7ab8ff; }
+.day .md { font-size: 1.5vh; opacity: 0.8; }
+.day .icon { font-size: 3.6vh; line-height: 1; }
+.day .temps { display: flex; gap: 0.6vw; align-items: baseline; }
+.day .tmax { font-size: 2.2vh; font-weight: 800; color: var(--hot); }
+.day .tmin { font-size: 1.8vh; font-weight: 700; color: var(--cold); }
+.day .pop { font-size: 1.5vh; color: var(--rain); font-weight: 700; }
+
+.fade { animation: fade 0.6s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(1vh); } to { opacity: 1; transform: none; } }

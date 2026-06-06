@@ -1,0 +1,13 @@
+{
+  "name": "stream-weather",
+  "version": "1.0.0",
+  "private": true,
+  "description": "全国主要都市の天気を気象庁JSONから取得し、4K/8K対応でYouTube Liveへ24時間配信する",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

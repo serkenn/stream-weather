@@ -1,0 +1,6 @@
+.env
+node_modules/
+bgm/*
+!bgm/README.md
+*.log
+.DS_Store

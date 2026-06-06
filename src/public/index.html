@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>全国お天気チャンネル</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="bar">
+      <div class="title">全国のお天気・週間天気予報を24時間お届けします</div>
+      <div class="clock">
+        <span id="date" class="date"></span>
+        <span id="time" class="time"></span>
+      </div>
+    </header>
+
+    <main>
+      <section class="today">
+        <h2 class="sec-title">きょうの天気</h2>
+        <div id="cards" class="cards"></div>
+      </section>
+
+      <section class="weekly">
+        <h2 class="sec-title">週間天気予報　<span id="weekly-city" class="weekly-city"></span></h2>
+        <div id="week" class="week"></div>
+      </section>
+    </main>
+
+    <footer class="bar foot">
+      <span id="updated" class="updated">データ取得中…</span>
+      <span class="source">データ：気象庁（JMA） ／ BGM：bgm フォルダ内のフリー音源</span>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

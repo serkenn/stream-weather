@@ -1,0 +1,39 @@
+services:
+  weather-live:
+    build: .
+    container_name: stream-weather
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # .env が無い場合のフォールバック既定値（.env が優先される）
+      OUTPUT_W: "${OUTPUT_W:-3840}"
+      OUTPUT_H: "${OUTPUT_H:-2160}"
+      FPS: "${FPS:-30}"
+      VIDEO_BITRATE: "${VIDEO_BITRATE:-16000k}"
+      VIDEO_ENCODER: "${VIDEO_ENCODER:-libx264}"
+    volumes:
+      # フリーBGMをここに置く（コンテナ再ビルド不要）
+      - ./bgm:/app/bgm:ro
+    # 共有メモリ不足で Chromium が落ちるのを防ぐ
+    shm_size: "2gb"
+    ports:
+      # サーバーではローカル限定で公開（SSHトンネル経由で確認）。
+      # 外部に見せたい場合のみ "8080:8080" に変更。
+      - "127.0.0.1:8080:8080"
+
+  # ▼ GPU(NVENC)で8K配信する場合の構成例。利用時は上の weather-live を止め、
+  #   .env で VIDEO_ENCODER=hevc_nvenc, OUTPUT_W/H=7680/4320, VIDEO_BITRATE=45000k 等に。
+  # weather-live-gpu:
+  #   build: .
+  #   restart: unless-stopped
+  #   env_file: [.env]
+  #   volumes: ["./bgm:/app/bgm:ro"]
+  #   shm_size: "2gb"
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu, video]

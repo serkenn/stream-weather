@@ -70,17 +70,33 @@ function parseForecast(data, city) {
   }));
 
   // 今日の最高/最低は週間[0]を優先、無ければ短期気温から補完
+  const tempTs = sSeries[2] || {};
+  const tArea = at(tempTs.areas, ti) || at(tempTs.areas, 0) || {};
+  const tempDefs = tempTs.timeDefines || [];
   let todayMax = week[0]?.tempMax ?? null;
   let todayMin = week[0]?.tempMin ?? null;
   if (todayMax == null || todayMin == null) {
-    const tempTs = sSeries[2] || {};
-    const tArea = at(tempTs.areas, ti) || at(tempTs.areas, 0) || {};
     const temps = (tArea.temps || []).map(clean).filter((x) => x != null).map(Number);
     if (temps.length) {
       todayMin = todayMin ?? Math.min(...temps);
       todayMax = todayMax ?? Math.max(...temps);
     }
   }
+
+  // --- 左端「今日の24時間天気」用の時系列（近似）---
+  // 降水確率(6時間刻み)を主軸に、その日の天気コードと同時刻の気温を合わせる。
+  const series = (popArea.pops || [])
+    .map((p, i) => {
+      const t = clean(at(popTs.timeDefines, i));
+      const date = (t || "").slice(0, 10);
+      const dIdx = days.findIndex((dd) => (dd.date || "").slice(0, 10) === date);
+      const code = dIdx >= 0 ? days[dIdx].code : days[0]?.code ?? null;
+      const tIdx = tempDefs.findIndex((td) => td === t);
+      const temp = tIdx >= 0 ? clean(at(tArea.temps, tIdx)) : null;
+      return { time: t, pop: clean(p), code, temp: temp != null ? Number(temp) : null };
+    })
+    .filter((x) => x.time)
+    .slice(0, 8); // 今日〜明日先頭まで（約24〜30時間）
 
   return {
     name: city.name,
@@ -97,6 +113,7 @@ function parseForecast(data, city) {
     },
     days,   // 今日/明日/明後日
     week,   // 週間
+    series, // 左端24h用タイムライン（近似）
   };
 }
 

@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ffmpeg \
       xvfb \
       x11-utils \
+      pulseaudio \
+      pulseaudio-utils \
       curl \
       ca-certificates \
       fonts-noto-cjk \

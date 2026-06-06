@@ -17,22 +17,33 @@
     </header>
 
     <main>
-      <section class="today">
-        <h2 class="sec-title">きょうの天気</h2>
-        <div id="cards" class="cards"></div>
+      <!-- 左端: 今日の24時間天気（都市ローテ） -->
+      <section id="left" class="hourly">
+        <h2 class="sec-title">今日の天気　<span id="hourly-city" class="accent"></span></h2>
+        <div id="hourly-head" class="hourly-head"></div>
+        <div id="hourly-list" class="hourly-list"></div>
       </section>
 
-      <section class="weekly">
-        <h2 class="sec-title">週間天気予報　<span id="weekly-city" class="weekly-city"></span></h2>
+      <!-- 中央: 全国情報（警報注意報 / 台風 / PM2.5）ローテ -->
+      <section id="center" class="center">
+        <div id="panel" class="panel"></div>
+      </section>
+
+      <!-- 最下部: 週間天気予報（都市ローテ） -->
+      <section id="weekly" class="weekly">
+        <h2 class="sec-title">週間天気予報　<span id="weekly-city" class="accent"></span></h2>
         <div id="week" class="week"></div>
       </section>
     </main>
 
     <footer class="bar foot">
       <span id="updated" class="updated">データ取得中…</span>
-      <span class="source">データ：気象庁（JMA）　／　<span id="nowplaying">♪ —</span></span>
+      <span class="source">データ：気象庁（JMA）／PM2.5：SPRINTARS　／　<span id="nowplaying">♪ —</span></span>
     </footer>
   </div>
+
+  <!-- BGM再生用（ブラウザ音声→PulseAudio→ffmpeg） -->
+  <audio id="bgm" crossorigin="anonymous"></audio>
 
   <script src="/app.js"></script>
 </body>

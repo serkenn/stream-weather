@@ -1,7 +1,6 @@
-/* すべてvw/vhベース。4K(3840x2160)でも8K(7680x4320)でも同一レイアウトが等倍スケールする。 */
+/* すべてvw/vhベース。1080p/4K/8Kいずれでも同一レイアウトが等倍スケールする。 */
 :root {
   --fg: #ffffff;
-  --bg-top: #0a2a4a;
   --bg-bottom: #061a30;
   --panel: rgba(255, 255, 255, 0.07);
   --panel-line: rgba(255, 255, 255, 0.16);
@@ -9,6 +8,9 @@
   --hot: #ff5a4d;
   --cold: #38a8ff;
   --rain: #5ec8ff;
+  --warn: #ff8a3d;
+  --alert: #ff4d4d;
+  --special: #ff2d78;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,7 +30,7 @@ html, body {
   background: radial-gradient(120% 120% at 50% -10%, #114a82 0%, #0a2a4a 45%, #061a30 100%);
 }
 
-/* ===== ヘッダー / フッター ===== */
+/* ===== ヘッダー / フッター（変更なし） ===== */
 .bar {
   display: flex; align-items: center; justify-content: space-between;
   padding: 1.1vh 2.2vw;
@@ -37,78 +39,113 @@ html, body {
 }
 .title {
   font-size: 2.6vh; font-weight: 800; letter-spacing: 0.04em;
-  color: var(--accent);
-  text-shadow: 0 0.2vh 0.6vh rgba(0,0,0,0.5);
+  color: var(--accent); text-shadow: 0 0.2vh 0.6vh rgba(0,0,0,0.5);
 }
 .clock { display: flex; align-items: baseline; gap: 1vw; }
 .date { font-size: 2.2vh; font-weight: 600; opacity: 0.9; }
 .time { font-size: 3.4vh; font-weight: 800; font-variant-numeric: tabular-nums; }
-
 .foot {
-  margin-top: auto;
-  border-top: 0.18vh solid var(--panel-line);
-  border-bottom: none;
-  background: rgba(0,0,0,0.25);
-  font-size: 1.6vh; opacity: 0.85;
+  margin-top: auto; border-top: 0.18vh solid var(--panel-line); border-bottom: none;
+  background: rgba(0,0,0,0.25); font-size: 1.6vh; opacity: 0.88;
 }
+.accent { color: var(--accent); font-size: 2vh; }
 
-/* todayを大きめ、weeklyを小さめに固定配分。minmax(0,*)で溢れを防ぐ */
+/* ===== メイン: 3ゾーン（左端24h / 中央 / 最下部週間） ===== */
 main {
   flex: 1; min-height: 0;
   display: grid;
-  grid-template-rows: minmax(0, 1.9fr) minmax(0, 1fr);
-  padding: 1.4vh 2.2vw; gap: 1.4vh;
+  grid-template-columns: 23vw 1fr;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 0.92fr);
+  grid-template-areas: "left center" "weekly weekly";
+  padding: 1.4vh 2.2vw; gap: 1.4vh 1.6vw;
 }
+#left { grid-area: left; }
+#center { grid-area: center; }
+#weekly { grid-area: weekly; }
+
 .sec-title {
   font-size: 2vh; font-weight: 800; margin-bottom: 0.8vh;
   padding-left: 0.8vw; border-left: 0.5vw solid var(--accent);
 }
 
-/* ===== きょうの天気カード ===== */
-.today { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
-.cards {
-  min-height: 0; overflow: hidden;
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: 0.7vw;
+/* ===== 左端: 今日の24時間天気（縦タイムライン） ===== */
+.hourly { min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+.hourly-head {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--panel); border: 0.14vh solid var(--panel-line);
+  border-radius: 1vh; padding: 0.8vh 0.8vw; margin-bottom: 0.8vh;
 }
-.card {
-  background: var(--panel);
-  border: 0.14vh solid var(--panel-line);
-  border-radius: 1vh;
-  padding: 0.6vh 0.5vw;
+.hourly-head .icon { font-size: 4vh; }
+.hourly-head .temps .tmax { font-size: 2.6vh; font-weight: 800; color: var(--hot); }
+.hourly-head .temps .tmin { font-size: 2vh; font-weight: 700; color: var(--cold); margin-left: 0.6vw; }
+.hourly-head .wtext { font-size: 1.4vh; opacity: 0.85; text-align: right; max-width: 9vw; }
+.hourly-list {
   min-height: 0; overflow: hidden;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 0.2vh;
+  display: grid; grid-auto-rows: 1fr; gap: 0.5vh;
 }
-.card .city { font-size: 2vh; font-weight: 800; }
-.card .icon { font-size: 4.6vh; line-height: 1; }
-.card .wtext { font-size: 1.5vh; opacity: 0.9; text-align: center; height: 2.6vh; overflow: hidden; }
-.card .temps { display: flex; gap: 0.8vw; align-items: baseline; }
-.card .tmax { font-size: 2.8vh; font-weight: 800; color: var(--hot); font-variant-numeric: tabular-nums; }
-.card .tmin { font-size: 2.2vh; font-weight: 700; color: var(--cold); font-variant-numeric: tabular-nums; }
-.card .pop  { font-size: 1.7vh; color: var(--rain); font-weight: 700; }
-.card .unit { font-size: 1.4vh; opacity: 0.7; }
-.card.err { opacity: 0.45; }
+.hrow {
+  display: grid; grid-template-columns: 3.2vw 1fr auto auto; align-items: center;
+  gap: 0.6vw; background: var(--panel); border: 0.12vh solid var(--panel-line);
+  border-radius: 0.8vh; padding: 0 0.6vw;
+}
+.hrow .htime { font-size: 1.7vh; font-weight: 700; font-variant-numeric: tabular-nums; opacity: 0.9; }
+.hrow .hicon { font-size: 2.6vh; }
+.hrow .hpop { font-size: 1.7vh; color: var(--rain); font-weight: 700; min-width: 4.5vw; text-align: right; }
+.hrow .htemp { font-size: 1.8vh; font-weight: 800; min-width: 3.5vw; text-align: right; }
 
-/* ===== 週間予報 ===== */
+/* ===== 中央: 全国情報パネル ===== */
+.center {
+  min-height: 0;
+  background: var(--panel); border: 0.16vh solid var(--panel-line); border-radius: 1.2vh;
+  overflow: hidden; position: relative;
+}
+.panel { position: absolute; inset: 0; padding: 1.6vh 1.6vw; display: flex; flex-direction: column; }
+.panel.fade { animation: fade 0.6s ease; }
+.panel-title {
+  font-size: 2.8vh; font-weight: 800; color: var(--accent);
+  border-bottom: 0.2vh solid var(--panel-line); padding-bottom: 0.8vh; margin-bottom: 1.2vh;
+}
+.panel-body { flex: 1; min-height: 0; overflow: hidden; }
+.panel-none { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 3vh; opacity: 0.8; }
+
+/* 警報・注意報 */
+.warn-group { margin-bottom: 1.2vh; }
+.warn-label {
+  display: inline-block; font-size: 2vh; font-weight: 800; padding: 0.2vh 0.8vw;
+  border-radius: 0.6vh; margin-bottom: 0.6vh;
+}
+.warn-label.special { background: var(--special); }
+.warn-label.alert { background: var(--alert); }
+.warn-label.advis { background: var(--warn); color: #1a1a1a; }
+.warn-items { display: flex; flex-wrap: wrap; gap: 0.5vw 0.8vw; }
+.warn-pref {
+  font-size: 1.7vh; background: rgba(255,255,255,0.08);
+  border: 0.12vh solid var(--panel-line); border-radius: 0.6vh; padding: 0.3vh 0.7vw;
+}
+.warn-pref b { color: var(--accent); font-weight: 800; margin-right: 0.4vw; }
+
+/* 台風 */
+.ty { background: rgba(255,255,255,0.06); border: 0.14vh solid var(--panel-line);
+  border-radius: 1vh; padding: 1.2vh 1.4vw; margin-bottom: 1.2vh; }
+.ty .ty-name { font-size: 2.6vh; font-weight: 800; }
+.ty .ty-cat { font-size: 1.8vh; color: var(--accent); margin-left: 1vw; }
+.ty .ty-row { font-size: 2vh; margin-top: 0.6vh; }
+.ty .ty-row b { color: var(--rain); }
+
+/* PM2.5 */
+.pm25-wrap { height: 100%; display: flex; align-items: center; justify-content: center; }
+.pm25-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 0.8vh; }
+
+/* ===== 最下部: 週間予報 ===== */
 .weekly { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
-.weekly-city { color: var(--accent); font-size: 2vh; }
 .week {
   min-height: 0; overflow: hidden;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: minmax(0, 1fr);
-  gap: 0.7vw;
+  display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: minmax(0, 1fr); gap: 0.7vw;
 }
 .day {
-  background: var(--panel);
-  border: 0.14vh solid var(--panel-line);
-  border-radius: 1vh;
+  background: var(--panel); border: 0.14vh solid var(--panel-line); border-radius: 1vh;
   min-height: 0; overflow: hidden;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 0.3vh; padding: 0.6vh 0.4vw;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3vh; padding: 0.6vh 0.4vw;
 }
 .day .dow { font-size: 1.9vh; font-weight: 800; }
 .day .dow.sun { color: #ff7a7a; }

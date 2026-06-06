@@ -1,26 +1,40 @@
 # 全国お天気 YouTube Live 配信システム
 
-気象庁(JMA)の無料JSONから全国主要都市の天気・気温・降水確率・週間予報を取得し、
-HTMLダッシュボードを生成 → ヘッドレスChromiumで描画 → ffmpegで画面キャプチャ＋BGM合成 →
+気象庁(JMA)の無料JSON等から天気・週間予報・全国の警報/注意報・台風・PM2.5を取得し、
+HTMLダッシュボードを生成 → ヘッドレスChromiumで描画 → ffmpegで画面キャプチャ＋音声合成 →
 **YouTube Liveへ24時間配信**します。**既定1080p**（CPUエンコード向き）で、設定だけで**4K/8Kへ拡張可能**。Docker1コンテナで動作。
 
 ```
-気象庁JSON ──> Node(取得/整形/HTML配信) ──> Chromium(描画) ──> ffmpeg(画面+BGM) ──RTMP──> YouTube Live
+JMA/SPRINTARS ──> Node(取得/整形/HTML配信) ──> Chromium(描画+音声再生) ──> ffmpeg(画面+PulseAudio音声) ──RTMP──> YouTube Live
 ```
 
+### 画面構成（NCM風 3ゾーン）
+- **上部**: タイトル＋日本時間の時計
+- **左端**: 今日の24時間天気（各地ローテーション）
+- **中央**: 全国の「警報・注意報」「台風情報」「PM2.5分布予測」をローテーション。**切替時に OpenJTalk(`mei_sad`) で「〜です。」と読み上げ**（BGMは自動でダッキング）
+- **最下部**: 週間天気予報（各地ローテーション）
+
 > レイアウトはビューポート単位なので、1080p / 4K / 8K のいずれでも同じ見た目で等倍スケールします。
+> 音声は **ブラウザ(Chromium)がBGM＋TTSを再生し、PulseAudio経由でffmpegが取り込む**方式です。
 
 ## 構成
 
 | パス | 役割 |
 |------|------|
-| `src/server.js` | 依存ゼロのHTTPサーバ。気象庁データを定期取得しダッシュボード配信 |
-| `src/jma.js` | 気象庁JSONの取得・整形（欠損に強い防御的パース） |
+| `src/server.js` | 依存ゼロのHTTPサーバ。天気/全国情報を定期取得、BGM一覧・音源配信・TTS中継・PM2.5画像プロキシ |
+| `src/jma.js` | 気象庁の天気JSON取得・整形（24h時系列・週間を含む防御的パース） |
+| `src/national.js` | 全国の警報・注意報（全58予報区を集約）＋台風情報の取得・整形 |
 | `src/cities.js` | 表示地点リスト（**ここを編集すれば長崎県内版などに差替可**） |
-| `src/public/` | ダッシュボードのHTML/CSS/JS（vw/vhベースで4K/8K等倍スケール） |
-| `scripts/start-stream.sh` | Xvfb + Chromium + ffmpeg のオーケストレータ |
-| `bgm/` | フリーBGMを置く場所（ループ再生） |
+| `src/public/` | ダッシュボードのHTML/CSS/JS（3ゾーン・Web Audio・TTS） |
+| `scripts/start-stream.sh` | Xvfb + PulseAudio + Chromium + ffmpeg のオーケストレータ |
+| `bgm/` | フリーBGMを置く場所（ブラウザでループ再生） |
 | `Dockerfile` / `docker-compose.yml` | 1コンテナ構成 |
+
+### 中央パネルのデータ源と注意
+- **警報・注意報／台風**: 気象庁の無料JSON（`warning/*`, `typhoon/*`）。
+- **PM2.5分布予測**: SPRINTARS（九州大学）の予測画像を `.env` の `PM25_IMAGE_URL` に設定すると表示（サーバがプロキシ＆キャッシュ）。
+  **未設定なら「準備中」表示**。⚠️ 学術機関の画像のため、**放送での利用は本来要許諾**。利用条件を確認のうえ設定してください。
+- **音声(TTS)**: [swiftlybot OpenJTalk API](https://openjtalk-api.swiftlybot.com/synthesis)（`mei_sad`）。外部API障害時は無音スキップ（配信は継続）。
 
 > **Debianサーバーで運用する場合は [DEPLOY-debian.md](./DEPLOY-debian.md) を参照**（Docker導入スクリプト・自動起動・GPU/8K手順つき）。
 

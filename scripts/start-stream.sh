@@ -63,6 +63,28 @@ if ! xdpyinfo -display ":${DISPLAY_NUM}" >/dev/null 2>&1; then
 fi
 echo "[stream] Xvfb ready on :${DISPLAY_NUM}"
 
+# ===== 2.5) PulseAudio（ブラウザ音声→null sink→ffmpegが取り込む）=====
+# BGMもTTSもブラウザ(Chromium)が再生し、その音声をPulseAudioのnull sinkに集約、
+# ffmpegが sink.monitor をキャプチャする。失敗時はffmpeg側で無音にフォールバック。
+export HOME="${HOME:-/root}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/pulse-runtime}"
+mkdir -p "${XDG_RUNTIME_DIR}" && chmod 700 "${XDG_RUNTIME_DIR}"
+PULSE_OK=0
+if command -v pulseaudio >/dev/null 2>&1; then
+  pulseaudio -D --exit-idle-time=-1 --disallow-exit \
+    --load="module-native-protocol-unix" 2>/tmp/pulse.log || true
+  # 起動待ち
+  for _ in $(seq 1 20); do pactl info >/dev/null 2>&1 && break; sleep 0.3; done
+  if pactl info >/dev/null 2>&1; then
+    pactl load-module module-null-sink sink_name=stream \
+      sink_properties=device.description=stream >/dev/null 2>&1 || true
+    pactl set-default-sink stream >/dev/null 2>&1 || true
+    PULSE_OK=1
+    echo "[stream] PulseAudio ready (sink=stream)"
+  fi
+fi
+[ "${PULSE_OK}" -eq 1 ] || echo "[stream] WARN: PulseAudio起動失敗 → 無音で配信します"
+
 # ===== 3) Chromium キオスク =====
 # 起動フラグだけでは翻訳バーが残る環境があるため、管理ポリシーで確実に無効化。
 mkdir -p /etc/chromium/policies/managed 2>/dev/null || true
@@ -87,29 +109,12 @@ JSON
 echo "[stream] Chromium 起動。描画安定まで待機..."
 sleep 6
 
-# ===== 4) BGM プレイリスト生成 =====
-# 注意: ls にglobを渡すと nullglob 有効時に引数ゼロ→CWD一覧になる罠があるため、
-#       globループで安全に列挙する（bashのglobは既にアルファベット順）。
-PLAYLIST="/tmp/bgm.txt"
-: > "${PLAYLIST}"
-shopt -s nullglob nocaseglob
-BGM_FILES=()
-for f in "${BGM_DIR}"/*.mp3 "${BGM_DIR}"/*.m4a "${BGM_DIR}"/*.aac \
-         "${BGM_DIR}"/*.wav "${BGM_DIR}"/*.flac "${BGM_DIR}"/*.ogg; do
-  [ -f "$f" ] && BGM_FILES+=("$f")
-done
-shopt -u nullglob nocaseglob
-
-if [ "${#BGM_FILES[@]}" -eq 0 ]; then
-  echo "[stream] WARN: ${BGM_DIR} にBGMが無いため無音で配信します"
-  AUDIO_INPUT=(-f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=44100")
+# ===== 4) 音声入力（PulseAudio monitor / 失敗時は無音）=====
+if [ "${PULSE_OK}" -eq 1 ]; then
+  echo "[stream] 音声: PulseAudio(stream.monitor) を取り込み"
+  AUDIO_INPUT=(-f pulse -i stream.monitor)
 else
-  echo "[stream] BGM ${#BGM_FILES[@]}曲をループ再生"
-  for f in "${BGM_FILES[@]}"; do
-    # concat デミューザ用にシングルクオートをエスケープ
-    printf "file '%s'\n" "${f//\'/\'\\\'\'}" >> "${PLAYLIST}"
-  done
-  AUDIO_INPUT=(-stream_loop -1 -f concat -safe 0 -i "${PLAYLIST}")
+  AUDIO_INPUT=(-f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=44100")
 fi
 
 # ===== 5) エンコーダ別オプション =====
@@ -122,9 +127,6 @@ case "${VIDEO_ENCODER}" in
 esac
 
 # ===== 6) ffmpeg 配信 =====
-# 「再生中BGM」表示用に、再生開始時刻(epoch ms)を記録（Nodeが /api/nowplaying で参照）
-date +%s%3N > /tmp/bgm-start
-
 echo "[stream] 配信開始 → ${RTMP_URL}/****"
 exec ffmpeg -hide_banner -loglevel warning \
   -thread_queue_size 1024 \

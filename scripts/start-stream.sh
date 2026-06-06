@@ -79,11 +79,17 @@ echo "[stream] Chromium 起動。描画安定まで待機..."
 sleep 6
 
 # ===== 4) BGM プレイリスト生成 =====
+# 注意: ls にglobを渡すと nullglob 有効時に引数ゼロ→CWD一覧になる罠があるため、
+#       globループで安全に列挙する（bashのglobは既にアルファベット順）。
 PLAYLIST="/tmp/bgm.txt"
 : > "${PLAYLIST}"
 shopt -s nullglob nocaseglob
-mapfile -t BGM_FILES < <(ls -1 "${BGM_DIR}"/*.mp3 "${BGM_DIR}"/*.m4a "${BGM_DIR}"/*.aac \
-  "${BGM_DIR}"/*.wav "${BGM_DIR}"/*.flac "${BGM_DIR}"/*.ogg 2>/dev/null | sort)
+BGM_FILES=()
+for f in "${BGM_DIR}"/*.mp3 "${BGM_DIR}"/*.m4a "${BGM_DIR}"/*.aac \
+         "${BGM_DIR}"/*.wav "${BGM_DIR}"/*.flac "${BGM_DIR}"/*.ogg; do
+  [ -f "$f" ] && BGM_FILES+=("$f")
+done
+shopt -u nullglob nocaseglob
 
 if [ "${#BGM_FILES[@]}" -eq 0 ]; then
   echo "[stream] WARN: ${BGM_DIR} にBGMが無いため無音で配信します"

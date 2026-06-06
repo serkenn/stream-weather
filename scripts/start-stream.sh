@@ -119,7 +119,7 @@ esac
 echo "[stream] 配信開始 → ${RTMP_URL}/****"
 exec ffmpeg -hide_banner -loglevel warning \
   -thread_queue_size 1024 \
-  -f x11grab -framerate "${FPS}" -video_size "${OUTPUT_W}x${OUTPUT_H}" -i ":${DISPLAY_NUM}" \
+  -f x11grab -draw_mouse 0 -framerate "${FPS}" -video_size "${OUTPUT_W}x${OUTPUT_H}" -i ":${DISPLAY_NUM}" \
   "${AUDIO_INPUT[@]}" \
   "${VENC_OPTS[@]}" \
   -c:a aac -b:a "${AUDIO_BITRATE}" -ar 44100 -ac 2 \

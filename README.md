@@ -32,8 +32,9 @@ JMA/SPRINTARS ──> Node(取得/整形/HTML配信) ──> Chromium(描画+音
 
 ### 中央パネルのデータ源と注意
 - **警報・注意報／台風**: 気象庁の無料JSON（`warning/*`, `typhoon/*`）。
-- **PM2.5分布予測**: SPRINTARS（九州大学）の予測画像を `.env` の `PM25_IMAGE_URL` に設定すると表示（サーバがプロキシ＆キャッシュ）。
-  **未設定なら「準備中」表示**。⚠️ 学術機関の画像のため、**放送での利用は本来要許諾**。利用条件を確認のうえ設定してください。
+- **PM2.5分布予測**: SPRINTARS（九州大学）の東アジア予測（日本語・64フレーム）を**既定で**アニメ表示
+  （`images/pm25_easia_jp_01〜64.png`）。`.env` の `PM25_FRAME_URL` / `PM25_FRAMES` で差替可。
+  ⚠️ **SPRINTARSは研究目的の試験提供**であり、**放送での利用は本来要許諾**。利用条件を確認のうえご利用ください。
 - **音声(TTS)**: [swiftlybot OpenJTalk API](https://openjtalk-api.swiftlybot.com/synthesis)（`mei_sad`）。外部API障害時は無音スキップ（配信は継続）。
 
 > **Debianサーバーで運用する場合は [DEPLOY-debian.md](./DEPLOY-debian.md) を参照**（Docker導入スクリプト・自動起動・GPU/8K手順つき）。

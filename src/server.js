@@ -21,8 +21,11 @@ const BGM_DIR = process.env.BGM_DIR || "/app/bgm";
 const AUDIO_EXT = new Set([".mp3", ".m4a", ".aac", ".wav", ".flac", ".ogg"]);
 // OpenJTalk TTS（swiftlybot）中継先
 const TTS_URL = process.env.TTS_URL || "https://openjtalk-api.swiftlybot.com/synthesis";
-// 全国PM2.5分布予測の画像URL（SPRINTARS等）。未設定ならPM2.5パネルは取得不可表示。
-const PM25_IMAGE_URL = process.env.PM25_IMAGE_URL || "";
+// 全国PM2.5分布予測（SPRINTARS東アジア・日本語版・64フレームのアニメ）。
+//   {n} が 01〜PM25_FRAMES のゼロ埋め2桁に置換される。空文字でPM2.5パネル無効。
+const PM25_FRAME_URL = process.env.PM25_FRAME_URL ||
+  "https://sprintars.riam.kyushu-u.ac.jp/images/pm25_easia_jp_{n}.png";
+const PM25_FRAMES = Number(process.env.PM25_FRAMES || 64);
 
 let cache = { updatedAt: null, cities: [] };
 let national = {
@@ -109,17 +112,14 @@ async function synthTTS(text, speaker, speed) {
   return buf;
 }
 
-// ===== PM2.5 画像プロキシ（取得をキャッシュ） =====
-let pm25Cache = { buf: null, at: 0, type: "image/png" };
-const PM25_TTL = 30 * 60 * 1000;
-async function getPm25() {
-  if (!PM25_IMAGE_URL) return null;
-  if (pm25Cache.buf && Date.now() - pm25Cache.at < PM25_TTL) return pm25Cache;
-  const res = await fetch(PM25_IMAGE_URL, { headers: { "User-Agent": "stream-weather/1.0" } });
-  if (!res.ok) throw new Error(`PM2.5 HTTP ${res.status}`);
-  const buf = Buffer.from(await res.arrayBuffer());
-  pm25Cache = { buf, at: Date.now(), type: res.headers.get("content-type") || "image/png" };
-  return pm25Cache;
+// ===== PM2.5 アニメフレームURL一覧 =====
+function pm25Frames() {
+  if (!PM25_FRAME_URL) return [];
+  const out = [];
+  for (let i = 1; i <= PM25_FRAMES; i++) {
+    out.push(PM25_FRAME_URL.replace("{n}", String(i).padStart(2, "0")));
+  }
+  return out;
 }
 
 async function refresh() {
@@ -220,14 +220,9 @@ const server = http.createServer((req, res) => {
       .catch((e) => { res.writeHead(502).end("TTS error: " + e.message); });
     return;
   }
-  if (req.url.startsWith("/api/pm25.png")) {
-    getPm25()
-      .then((c) => {
-        if (!c) { res.writeHead(404).end("PM25 not configured"); return; }
-        res.writeHead(200, { "Content-Type": c.type, "Cache-Control": "public, max-age=600" });
-        res.end(c.buf);
-      })
-      .catch((e) => { res.writeHead(502).end("PM25 error: " + e.message); });
+  if (req.url.startsWith("/api/pm25")) {
+    res.writeHead(200, { "Content-Type": MIME[".json"], "Cache-Control": "no-store" });
+    res.end(JSON.stringify({ frames: pm25Frames() }));
     return;
   }
   serveStatic(req, res);

@@ -140,12 +140,39 @@ function renderTyphoonPanel() {
   return html;
 }
 function renderPm25Panel() {
-  return `<div class="pm25-wrap"><img src="/api/pm25.png?t=${Date.now()}" onerror="pm25Failed(this)"></div>`;
+  return `<div class="pm25-wrap"><img id="pm25img" alt="PM2.5予測" onerror="pm25Failed(this)"></div>`;
 }
 window.pm25Failed = function (img) {
   const wrap = img.parentNode;
-  if (wrap) wrap.innerHTML = `<div class="panel-none">PM2.5予測画像は準備中です<br>（取得元URL未設定: 環境変数 PM25_IMAGE_URL）</div>`;
+  if (wrap) wrap.innerHTML = `<div class="panel-none">PM2.5予測画像を取得できません<br>（SPRINTARS提供・環境変数 PM25_FRAME_URL）</div>`;
 };
+// SPRINTARS PM2.5予測の64フレームをアニメ表示
+let pm25FrameUrls = [];
+let pm25Timer = null;
+let pm25FrameIdx = 0;
+async function loadPm25Frames() {
+  if (pm25FrameUrls.length) return pm25FrameUrls;
+  try {
+    const r = await fetch("/api/pm25", { cache: "no-store" });
+    const j = await r.json();
+    pm25FrameUrls = (j && j.frames) || [];
+  } catch { pm25FrameUrls = []; }
+  return pm25FrameUrls;
+}
+function startPm25Anim() {
+  const img = document.getElementById("pm25img");
+  if (!img) return;
+  if (!pm25FrameUrls.length) { window.pm25Failed(img); return; }
+  pm25FrameIdx = 0;
+  const step = () => {
+    const el = document.getElementById("pm25img");
+    if (!el) { if (pm25Timer) { clearInterval(pm25Timer); pm25Timer = null; } return; }
+    el.src = pm25FrameUrls[pm25FrameIdx % pm25FrameUrls.length];
+    pm25FrameIdx++;
+  };
+  step();
+  pm25Timer = setInterval(step, 500);
+}
 
 const PANELS = [
   { key: "warn", title: "全国の 警報・注意報", phrase: "全国の警報・注意報です。", render: renderWarnPanel },
@@ -153,11 +180,14 @@ const PANELS = [
   { key: "pm25", title: "全国の PM2.5分布予測", phrase: "全国のPM2.5分布予測です。", render: renderPm25Panel },
 ];
 function showPanel(i) {
+  // 前パネルのPM2.5アニメを停止
+  if (pm25Timer) { clearInterval(pm25Timer); pm25Timer = null; }
   const p = PANELS[i];
   speak(p.phrase);
   const el = document.getElementById("panel");
   el.classList.remove("fade"); void el.offsetWidth; el.classList.add("fade");
   el.innerHTML = `<div class="panel-title">${p.title}</div><div class="panel-body">${p.render()}</div>`;
+  if (p.key === "pm25") loadPm25Frames().then(startPm25Anim);
 }
 
 // ===== 音声: BGM(<audio>) ＋ TTS(Web Audio) =====

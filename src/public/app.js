@@ -152,12 +152,32 @@ async function fetchData() {
   }
 }
 
+// 現在再生中のBGMを右下に表示
+async function fetchNowPlaying() {
+  const el = document.getElementById("nowplaying");
+  if (!el) return;
+  try {
+    const r = await fetch("/api/nowplaying", { cache: "no-store" });
+    const j = await r.json();
+    if (j && j.playing) {
+      el.textContent = "♪ " + (j.artist ? `${j.title} ／ ${j.artist}` : j.title);
+    } else {
+      el.textContent = "♪ BGM：なし（無音）";
+    }
+  } catch {
+    /* 取得失敗時は表示を変えない */
+  }
+}
+
 // 起動
 renderClock();
 setInterval(renderClock, 1000);
 
 fetchData();
 setInterval(fetchData, 5 * 60 * 1000); // 5分ごとに再取得
+
+fetchNowPlaying();
+setInterval(fetchNowPlaying, 5000); // 5秒ごとに再生中BGMを更新
 
 setInterval(() => {
   rotateIndex += 1;

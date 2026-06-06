@@ -122,6 +122,9 @@ case "${VIDEO_ENCODER}" in
 esac
 
 # ===== 6) ffmpeg 配信 =====
+# 「再生中BGM」表示用に、再生開始時刻(epoch ms)を記録（Nodeが /api/nowplaying で参照）
+date +%s%3N > /tmp/bgm-start
+
 echo "[stream] 配信開始 → ${RTMP_URL}/****"
 exec ffmpeg -hide_banner -loglevel warning \
   -thread_queue_size 1024 \

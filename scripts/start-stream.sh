@@ -68,9 +68,13 @@ echo "[stream] Xvfb ready on :${DISPLAY_NUM}"
 # ffmpegが sink.monitor をキャプチャする。失敗時はffmpeg側で無音にフォールバック。
 export HOME="${HOME:-/root}"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/pulse-runtime}"
-mkdir -p "${XDG_RUNTIME_DIR}" && chmod 700 "${XDG_RUNTIME_DIR}"
 PULSE_OK=0
 if command -v pulseaudio >/dev/null 2>&1; then
+  # restart時に残るPulseAudioの残骸（pid/socket）を掃除してから起動
+  pulseaudio -k >/dev/null 2>&1 || true
+  rm -rf "${XDG_RUNTIME_DIR}/pulse" 2>/dev/null || true
+  sleep 1
+  mkdir -p "${XDG_RUNTIME_DIR}" && chmod 700 "${XDG_RUNTIME_DIR}"
   pulseaudio -D --exit-idle-time=-1 --disallow-exit \
     --load="module-native-protocol-unix" 2>/tmp/pulse.log || true
   # 起動待ち
@@ -129,9 +133,11 @@ esac
 # ===== 6) ffmpeg 配信 =====
 echo "[stream] 配信開始 → ${RTMP_URL}/****"
 exec ffmpeg -hide_banner -loglevel warning \
-  -thread_queue_size 1024 \
+  -thread_queue_size 4096 \
   -f x11grab -draw_mouse 0 -framerate "${FPS}" -video_size "${OUTPUT_W}x${OUTPUT_H}" -i ":${DISPLAY_NUM}" \
+  -thread_queue_size 4096 \
   "${AUDIO_INPUT[@]}" \
   "${VENC_OPTS[@]}" \
   -c:a aac -b:a "${AUDIO_BITRATE}" -ar 44100 -ac 2 \
+  -max_muxing_queue_size 1024 \
   -f flv "${RTMP_URL}/${YOUTUBE_STREAM_KEY}"

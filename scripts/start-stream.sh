@@ -11,12 +11,12 @@ set -euo pipefail
 # ===== 設定（.env / 環境変数で上書き可）=====
 : "${YOUTUBE_STREAM_KEY:?YOUTUBE_STREAM_KEY を設定してください（.env 参照）}"
 
-OUTPUT_W="${OUTPUT_W:-3840}"
-OUTPUT_H="${OUTPUT_H:-2160}"
+OUTPUT_W="${OUTPUT_W:-1920}"
+OUTPUT_H="${OUTPUT_H:-1080}"
 FPS="${FPS:-30}"
-VIDEO_ENCODER="${VIDEO_ENCODER:-libx264}"   # libx264 / h264_nvenc / hevc_nvenc など
+VIDEO_ENCODER="${VIDEO_ENCODER:-libx264}"   # libx264(CPU) / h264_nvenc / hevc_nvenc など
 X264_PRESET="${X264_PRESET:-veryfast}"
-VIDEO_BITRATE="${VIDEO_BITRATE:-16000k}"    # 4K目安16M / 8KはGPU+大帯域で40M以上
+VIDEO_BITRATE="${VIDEO_BITRATE:-6000k}"     # 1080p目安6M / 4K=16M / 8K=45M(要GPU)
 AUDIO_BITRATE="${AUDIO_BITRATE:-192k}"
 PORT="${PORT:-8080}"
 DISPLAY_NUM="${DISPLAY_NUM:-99}"

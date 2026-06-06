@@ -7,10 +7,10 @@ services:
       - .env
     environment:
       # .env が無い場合のフォールバック既定値（.env が優先される）
-      OUTPUT_W: "${OUTPUT_W:-3840}"
-      OUTPUT_H: "${OUTPUT_H:-2160}"
+      OUTPUT_W: "${OUTPUT_W:-1920}"
+      OUTPUT_H: "${OUTPUT_H:-1080}"
       FPS: "${FPS:-30}"
-      VIDEO_BITRATE: "${VIDEO_BITRATE:-16000k}"
+      VIDEO_BITRATE: "${VIDEO_BITRATE:-6000k}"
       VIDEO_ENCODER: "${VIDEO_ENCODER:-libx264}"
     volumes:
       # フリーBGMをここに置く（コンテナ再ビルド不要）
